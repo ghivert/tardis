@@ -8,7 +8,7 @@ this gap with [Lustre](https://hexdocs.pm/lustre). Because of the immutable natu
 
 ## Demo
 
-![Demo video](assets/demo.mp4)
+https://github.com/ghivert/tardis/assets/7314118/392462f6-316f-4066-87cc-0cfc7b312338
 
 ## Quickstart Guide
 
@@ -56,3 +56,5 @@ fn view(model) {
   ])
 }
 ```
+
+You're good to go!
