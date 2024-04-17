@@ -61,7 +61,7 @@ You're good to go!
 
 ## Multiple apps setup
 
-While it's easy to setup a single application with tardis, it can also be used to debug multiple applications in the same page. Tardis exposes two additional functions: `setup` and `application`. The first one initialize the instance of the debugger, while the second one allows to setup an application on the debugger!
+While it's easy to setup a single application with tardis, it can also be used to debug multiple applications in the same page. Tardis exposes two additional functions: [`setup`](https://hexdocs.pm/tardis/tardis.html#setup) and [`application`](https://hexdocs.pm/tardis/tardis.html#application). The first one initialize the instance of the debugger, while the second one allows to setup an application on the debugger!
 
 In case you're developping a independant package, you can even send the debugger instance directly to your application, and it will nicely integrate in it!
 
