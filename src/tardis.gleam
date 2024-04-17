@@ -71,7 +71,7 @@ pub fn setup() {
   |> result.map(fn(dispatch) { Instance(dispatch) })
 }
 
-pub fn singleton(name: String) {
+pub fn single(name: String) {
   setup()
   |> result.map(application(_, name))
 }
