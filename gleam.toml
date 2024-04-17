@@ -1,0 +1,20 @@
+# For a full reference of all the available options, you can have a look at
+# https://gleam.run/writing-gleam/gleam-toml/.
+name = "tardis"
+target = "javascript"
+version = "0.1.0"
+
+description = "Time traveller debugger, tailor-made for Lustre"
+licences = ["MIT"]
+# links = [{title = "Website", href = "https://gleam.run"}]
+internal_modules = ["tardis/internals", "tardis/internals/*"]
+repository = {type = "github", user = "ghivert", repo = "tardis"}
+
+[dependencies]
+gleam_stdlib = ">= 0.36.0 and < 1.0.0"
+lustre = ">= 4.1.8 and < 5.0.0"
+plinth = ">= 0.2.0 and < 1.0.0"
+sketch = ">= 2.0.0 and < 3.0.0"
+
+[dev-dependencies]
+gleeunit = ">= 1.1.2 and < 2.0.0"
