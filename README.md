@@ -31,9 +31,9 @@ pub fn main() {
   let assert Ok(main) = tardis.single("main")
 
   lustre.application(init, update, view)
-  |> tardis.wrap(main)
+  |> tardis.wrap(with: main)
   |> lustre.start("#app", Nil)
-  |> tardis.activate(main)
+  |> tardis.activate(with: main)
 }
 
 fn init(_) {
@@ -61,9 +61,9 @@ You're good to go!
 
 ## Multiple apps setup
 
-While it's easy to setup a single application with tardis, it can also be used to debug multiple applications in the same page. Tardis exposes two additional functions: [`setup`](https://hexdocs.pm/tardis/tardis.html#setup) and [`application`](https://hexdocs.pm/tardis/tardis.html#application). The first one initialize the instance of the debugger, while the second one allows to setup an application on the debugger!
+While it's easy to setup a single application with tardis, it can also be used to debug multiple applications in the same page. Tardis exposes two additional functions: [`setup`](https://hexdocs.pm/tardis/tardis.html#setup) and [`application`](https://hexdocs.pm/tardis/tardis.html#application). The first one initialize the debugger, while the second one allows to setup an application on the debugger!
 
-In case you're developping a independant package, you can even send the debugger instance directly to your application, and it will nicely integrate in it!
+In case you're developping a independant package, you can even send the tardis or the debugger instance directly to your application, and it will nicely integrate in it!
 
 ```gleam
 import gleam/int
@@ -78,14 +78,14 @@ pub fn main() {
   let mod = tardis.application(instance, "module")
 
   lustre.application(init_1, update_1, view_1)
-  |> tardis.wrap(main)
+  |> tardis.wrap(with: main)
   |> lustre.start("#app", Nil)
-  |> tardis.activate(main)
+  |> tardis.activate(with: main)
 
   lustre.application(init_2, update_2, view_2)
-  |> tardis.wrap(mod)
+  |> tardis.wrap(with: mod)
   |> lustre.start("#mod", Nil)
-  |> tardis.activate(mod)
+  |> tardis.activate(with: mod)
 }
 ```
 

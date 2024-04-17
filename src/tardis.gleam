@@ -1,3 +1,43 @@
+//// Tardis is in charge of being your good debugger friend, able to navigate
+//// accross time and space! Just instanciate it, and use it in your application.
+////
+//// ```gleam
+//// import gleam/int
+//// import lustre
+//// import lustre/element/html
+//// import lustre/event
+//// import tardis
+////
+//// pub fn main() {
+////   let assert Ok(main) = tardis.single("main")
+////
+////   lustre.application(init, update, view)
+////   |> tardis.wrap(with: main)
+////   |> lustre.start("#app", Nil)
+////   |> tardis.activate(with: main)
+//// }
+////
+//// fn init(_) {
+////   0
+//// }
+////
+//// fn update(model, msg) {
+////   case msg {
+////     Incr -> model + 1
+////     Decr -> model - 1
+////   }
+//// }
+////
+//// fn view(model) {
+////   let count = int.to_string(model)
+////   html.div([], [
+////     html.button([event.on_click(Incr)], [html.text(" + ")]),
+////     html.p([], [html.text(count)]),
+////     html.button([event.on_click(Decr)], [html.text(" - ")])
+////   ])
+//// }
+//// ```
+
 import gleam/dynamic.{type Dynamic}
 import gleam/function
 import gleam/int
@@ -23,16 +63,32 @@ import tardis/internals/setup.{type Middleware}
 import tardis/internals/styles as s
 import tardis/internals/view as v
 
-pub opaque type Instance {
-  Instance(dispatch: fn(Action(Msg, lustre.ClientSpa)) -> Nil)
-}
-
+/// Represents the running Tardis. Should be used with lustre applications
+/// only. One tardis is enough for multiple lustre applications running on the
+/// same page, with their own update loop.
 pub opaque type Tardis {
-  Tardis(#(fn(Dynamic) -> Nil, Middleware))
+  Tardis(dispatch: fn(Action(Msg, lustre.ClientSpa)) -> Nil)
 }
 
-pub fn wrap(application: App(a, b, c), tardis: Tardis) {
-  let Tardis(#(_, middleware)) = tardis
+/// Represents the instance for an application. It should be used within one and
+/// only one application. You can get the instance by using [`application`](#application)
+/// or [`single`](#single).
+pub opaque type Instance {
+  Instance(#(fn(Dynamic) -> Nil, Middleware))
+}
+
+/// Wrap a lustre application with the debugger. The debugger will never interfere
+/// with your application by itself. You can directly chain your application with
+/// this function.
+/// ```gleam
+/// fn main() {
+///   let assert Ok(instance) = tardis.single("main")
+///   lustre.application(init, update, view)
+///   |> tardis.wrap(with: instance)
+/// }
+/// ```
+pub fn wrap(application: App(a, b, c), with instance: Instance) {
+  let Instance(#(_, middleware)) = instance
   setup.update_lustre(
     application,
     setup.wrap_init(middleware),
@@ -40,9 +96,24 @@ pub fn wrap(application: App(a, b, c), tardis: Tardis) {
   )
 }
 
-pub fn activate(result: Result(fn(Action(a, b)) -> Nil, c), tardis: Tardis) {
+/// Activate the debugger of the application. `activate` should be run to let
+/// the debugger being able to rewind time. It should be executed on the exact
+/// same instance that has been wrapped.
+/// ```gleam
+/// fn main() {
+///   let assert Ok(instance) = tardis.single("main")
+///   lustre.application(init, update, view)
+///   |> tardis.wrap(with: instance)
+///   |> lustre.start()
+///   |> tardis.activate(with: instance)
+/// }
+/// ```
+pub fn activate(
+  result: Result(fn(Action(a, b)) -> Nil, c),
+  with instance: Instance,
+) {
   use dispatch <- result.map(result)
-  let Tardis(#(dispatcher, _)) = tardis
+  let Instance(#(dispatcher, _)) = instance
   dispatcher(dynamic.from(dispatch))
   dispatch
 }
@@ -62,25 +133,31 @@ fn start_sketch(root) {
   error.SketchError(error)
 }
 
+/// Creates the tardis. Should be run once, at the start of the application.
+/// It can be skipped when using [`single`](#single).
 pub fn setup() {
   let #(shadow_root, lustre_root) = setup.mount_shadow_node()
   start_sketch(shadow_root)
   |> result.map(sketch.compose(view, _))
   |> result.map(lustre.application(init, update, _))
   |> result.try(start_lustre(lustre_root, _))
-  |> result.map(fn(dispatch) { Instance(dispatch) })
+  |> result.map(fn(dispatch) { Tardis(dispatch) })
 }
 
+/// Directly creates a tardis instance for a single application.
+/// Replaces `setup` and `application` in a single application context.
 pub fn single(name: String) {
   setup()
   |> result.map(application(_, name))
 }
 
-pub fn application(instance: Instance, name: String) {
+/// Creates the application debugger from the tardis. Should be run once,
+/// at the start of the application. It can be skipped when using [`single`](#single).
+pub fn application(instance: Tardis, name: String) -> Instance {
   let dispatch = instance.dispatch
   let updater = setup.create_model_updater(dispatch, name)
   let adder = setup.step_adder(dispatch, name)
-  Tardis(#(updater, adder))
+  Instance(#(updater, adder))
 }
 
 fn init(_) {
