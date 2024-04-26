@@ -1,7 +1,7 @@
 import gleam/dynamic.{type Dynamic}
 import lustre/effect.{type Effect}
-import tardis/internals/data/step.{type Step}
 import tardis/internals/data/colors.{type ColorScheme}
+import tardis/internals/data/step.{type Step}
 
 pub type Msg {
   // Panel
