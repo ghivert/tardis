@@ -232,7 +232,7 @@ pub fn frozen_panel() {
     sketch.right(px(0)),
     sketch.left(px(0)),
     sketch.z_index(1_000_000),
-    sketch.background("rgba(255, 255, 255, 0.1)"),
+    // sketch.background("rgba(255, 255, 255, 0.1)"),
   ])
   |> sketch.to_lustre()
 }
