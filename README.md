@@ -3,8 +3,23 @@
 <!-- [![Package Version](https://img.shields.io/hexpm/v/tardis)](https://hex.pm/packages/tardis)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/tardis/) -->
 
-Every good frontend framework deserve to have a good debugger. Tardis tries to fill
-this gap with [Lustre](https://hexdocs.pm/lustre). Because of the immutable nature and the management of side-effects of lustre, it's possible to implement a debugger able to register everything that happened in the app and that can rewind the time in order to display the state of your app, at any point in time! Tardis is a time-traveller debugger, made to interact with multiple lustre applications and components on one page, with the simplest setup possible yet!
+> While fully working, and usable right away, Tardis is still in development to
+> find the perfect API and to see how to integrate it in Lustre & the Lustre
+> devtools. Maybe in few months, you'll be able to enjoy the time-traveller
+> debugger without any install needed! Right now, Tardis uses internals access
+> from Lustre, otherwise it could not work. Be careful when updating Lustre,
+> otherwise Tardis could end up not working! You can expect quick releases
+> though at each Lustre release!
+>
+> If you think to anything, feedbacks are greatly appreciated!
+
+Every good frontend framework deserve to have a good debugger. Tardis tries to
+fill this gap with [Lustre](https://hexdocs.pm/lustre). Because of the immutable
+nature and the management of side-effects of lustre, it's possible to implement
+a debugger able to register everything that happened in the app and that can
+rewind the time in order to display the state of your app, at any point in time!
+Tardis is a time-traveller debugger, made to interact with multiple lustre
+applications and components on one page, with the simplest setup possible yet!
 
 ## Demo
 
@@ -61,9 +76,16 @@ You're good to go!
 
 ## Multiple apps setup
 
-While it's easy to setup a single application with tardis, it can also be used to debug multiple applications in the same page. Tardis exposes two additional functions: [`setup`](https://hexdocs.pm/tardis/tardis.html#setup) and [`application`](https://hexdocs.pm/tardis/tardis.html#application). The first one initialize the debugger, while the second one allows to setup an application on the debugger!
+While it's easy to setup a single application with tardis, it can also be used
+to debug multiple applications in the same page. Tardis exposes two additional
+functions: [`setup`](https://hexdocs.pm/tardis/tardis.html#setup) and
+[`application`](https://hexdocs.pm/tardis/tardis.html#application). The first
+one initialize the debugger, while the second one allows to setup an application
+on the debugger!
 
-In case you're developping a independant package, you can even send the tardis or the debugger instance directly to your application, and it will nicely integrate in it!
+In case you're developping a independant package, you can even send the tardis
+or the debugger instance directly to your application, and it will nicely
+integrate in it!
 
 ```gleam
 import gleam/int
@@ -91,4 +113,7 @@ pub fn main() {
 
 ## Style collision
 
-No worry about the debugger going into your application! Tardis uses the Shadow DOM, meaning no style nor behavior will leak out of the debugger and ending in your application. Tardis will just come on top, watch the application, and can rollback in time. Nothing more!
+No worry about the debugger going into your application! Tardis uses the Shadow
+DOM, meaning no style nor behavior will leak out of the debugger and ending in
+your application. Tardis will just come on top, watch the application, and can
+rollback in time. Nothing more!

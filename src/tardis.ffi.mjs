@@ -43,7 +43,8 @@ export function inspect(v) {
   if (v instanceof Date) return new DataDate(`//js(Date("${v.toISOString()}"))`)
   if (v instanceof Function) {
     const args = []
-    for (const i of Array(v.length).keys()) args.push(String.fromCharCode(i + 97))
+    for (const i of Array(v.length).keys())
+      args.push(String.fromCharCode(i + 97))
     return new DataFunction(`//fn(${args.join(', ')}) { ... }`)
   }
   return inspectObject(v)
@@ -67,9 +68,11 @@ function inspectObject(v) {
 
 function inspectCustomType(record) {
   const props = List.fromArray(
-    Object.keys(record).map(label => {
+    Object.keys(record).map((label) => {
       const value = inspect(record[label])
-      return isNaN(parseInt(label)) ? [new Some(label + ': '), value] : [new None(), value]
+      return isNaN(parseInt(label))
+        ? [new Some(label + ': '), value]
+        : [new None(), value]
     })
   )
   return new DataCustomType(record.constructor.name, props)
@@ -84,7 +87,9 @@ export function inspectBitArray(bits) {
 }
 
 export function inspectUtfCodepoint(codepoint) {
-  return new DataUtfCodepoint(`//utfcodepoint(${String.fromCodePoint(codepoint.value)})`)
+  return new DataUtfCodepoint(
+    `//utfcodepoint(${String.fromCodePoint(codepoint.value)})`
+  )
 }
 
 export function stringify(v) {
@@ -106,7 +111,8 @@ export function stringify(v) {
   if (v instanceof Date) return `//js(Date("${v.toISOString()}"))`
   if (v instanceof Function) {
     const args = []
-    for (const i of Array(v.length).keys()) args.push(String.fromCharCode(i + 97))
+    for (const i of Array(v.length).keys())
+      args.push(String.fromCharCode(i + 97))
     return `//fn(${args.join(', ')}) { ... }`
   }
   return stringifyObject(v)
@@ -136,12 +142,14 @@ function stringifyObject(v) {
 
 function stringifyCustomType(record) {
   const props = Object.keys(record)
-    .map(label => {
+    .map((label) => {
       const value = stringify(record[label])
       return isNaN(parseInt(label)) ? `${label}: ${value}` : value
     })
     .join(', ')
-  return props ? `${record.constructor.name}(${props})` : record.constructor.name
+  return props
+    ? `${record.constructor.name}(${props})`
+    : record.constructor.name
 }
 
 export function stringifyList(list) {
@@ -189,6 +197,6 @@ export function addCustomStyles(content) {
 export function updateLustre(application, initMapper, updateMapper) {
   return application.withFields({
     update: updateMapper(application.update),
-    init: initMapper(application.init)
+    init: initMapper(application.init),
   })
 }
