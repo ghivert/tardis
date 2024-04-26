@@ -32,6 +32,8 @@ pub type Colors {
 pub type ColorScheme {
   AyuDark
   AyuLight
+  CatpuccinLight
+  CatpuccinFrappe
   Gleam
 }
 
@@ -39,6 +41,8 @@ pub fn cs_to_string(color_scheme) {
   case color_scheme {
     AyuDark -> "Ayu Dark"
     AyuLight -> "Ayu Light"
+    CatpuccinLight -> "Catpuccin Light"
+    CatpuccinFrappe -> "Catpuccin Frappé"
     Gleam -> "Gleam"
   }
 }
@@ -47,13 +51,15 @@ pub fn cs_from_string(key) {
   case key {
     "Ayu Dark" -> AyuDark
     "Ayu Light" -> AyuLight
+    "Catpuccin Light" -> CatpuccinLight
+    "Catpuccin Frappé" -> CatpuccinFrappe
     "Gleam" -> Gleam
     _ -> Gleam
   }
 }
 
 pub fn themes() {
-  [AyuDark, AyuLight, Gleam]
+  [AyuDark, AyuLight, CatpuccinLight, CatpuccinFrappe, Gleam]
 }
 
 pub const ayu_dark = Colors(
@@ -98,6 +104,50 @@ pub const ayu_light = Colors(
   custom_type: "#399ee6",
   regex: "#4cbf43",
   date: "#a37acc",
+)
+
+pub const catpuccin_light = Colors(
+  background: "#e6e9ef",
+  shadow: "#dce0e8",
+  primary: "#dc8a78",
+  editor_fg: "#4c4f69",
+  editor_bg: "#eff1f5",
+  gutter: "#dce0e8",
+  syntax_comment: "#6c6f85",
+  button: "#dd7878",
+  function: "#ea76cb",
+  nil: "#8839ef",
+  bool: "#d20f39",
+  constant: "#8839ef",
+  bit_array: "#40a02b",
+  utf_codepoint: "#fe640b",
+  string: "#40a02b",
+  number: "#04a5e5",
+  custom_type: "#7287fd",
+  regex: "#179299",
+  date: "#d20f39",
+)
+
+pub const catpuccin_frappe = Colors(
+  background: "#292c3c",
+  shadow: "#232634",
+  primary: "#f2d5cf",
+  editor_fg: "#c6d0f5",
+  editor_bg: "#303446",
+  gutter: "#232634",
+  syntax_comment: "#a5adce",
+  button: "#eebebe",
+  function: "#f4b8e4",
+  nil: "#ca9ee6",
+  bool: "#e78284",
+  constant: "#ca9ee6",
+  bit_array: "#a6d189",
+  utf_codepoint: "#ef9f76",
+  string: "#a6d189",
+  number: "#99d1db",
+  custom_type: "#babbf1",
+  regex: "#81c8be",
+  date: "#e78284",
 )
 
 pub const gleam = Colors(
@@ -172,6 +222,56 @@ pub fn ayu_light_class() {
   |> sketch.to_lustre()
 }
 
+pub fn catpuccin_light_class() {
+  sketch.class([
+    sketch.property("--background", catpuccin_light.background),
+    sketch.property("--shadow", catpuccin_light.shadow),
+    sketch.property("--primary", catpuccin_light.primary),
+    sketch.property("--editor-fg", catpuccin_light.editor_fg),
+    sketch.property("--editor-bg", catpuccin_light.editor_bg),
+    sketch.property("--gutter", catpuccin_light.gutter),
+    sketch.property("--syntax-comment", catpuccin_light.syntax_comment),
+    sketch.property("--button", catpuccin_light.button),
+    sketch.property("--function", catpuccin_light.function),
+    sketch.property("--nil", catpuccin_light.nil),
+    sketch.property("--bool", catpuccin_light.bool),
+    sketch.property("--constant", catpuccin_light.constant),
+    sketch.property("--bit-array", catpuccin_light.bit_array),
+    sketch.property("--utfcodepoint", catpuccin_light.utf_codepoint),
+    sketch.property("--string", catpuccin_light.string),
+    sketch.property("--number", catpuccin_light.number),
+    sketch.property("--custom-type", catpuccin_light.custom_type),
+    sketch.property("--regex", catpuccin_light.regex),
+    sketch.property("--date", catpuccin_light.date),
+  ])
+  |> sketch.to_lustre()
+}
+
+pub fn catpuccin_frappe_class() {
+  sketch.class([
+    sketch.property("--background", catpuccin_frappe.background),
+    sketch.property("--shadow", catpuccin_frappe.shadow),
+    sketch.property("--primary", catpuccin_frappe.primary),
+    sketch.property("--editor-fg", catpuccin_frappe.editor_fg),
+    sketch.property("--editor-bg", catpuccin_frappe.editor_bg),
+    sketch.property("--gutter", catpuccin_frappe.gutter),
+    sketch.property("--syntax-comment", catpuccin_frappe.syntax_comment),
+    sketch.property("--button", catpuccin_frappe.button),
+    sketch.property("--function", catpuccin_frappe.function),
+    sketch.property("--nil", catpuccin_frappe.nil),
+    sketch.property("--bool", catpuccin_frappe.bool),
+    sketch.property("--constant", catpuccin_frappe.constant),
+    sketch.property("--bit-array", catpuccin_frappe.bit_array),
+    sketch.property("--utfcodepoint", catpuccin_frappe.utf_codepoint),
+    sketch.property("--string", catpuccin_frappe.string),
+    sketch.property("--number", catpuccin_frappe.number),
+    sketch.property("--custom-type", catpuccin_frappe.custom_type),
+    sketch.property("--regex", catpuccin_frappe.regex),
+    sketch.property("--date", catpuccin_frappe.date),
+  ])
+  |> sketch.to_lustre()
+}
+
 pub fn gleam_class() {
   sketch.class([
     sketch.property("--background", gleam.background),
@@ -218,6 +318,8 @@ pub fn get_color_scheme_class(color_scheme: ColorScheme) {
   case color_scheme {
     AyuLight -> ayu_light_class()
     AyuDark -> ayu_dark_class()
+    CatpuccinLight -> catpuccin_light_class()
+    CatpuccinFrappe -> catpuccin_frappe_class()
     Gleam -> gleam_class()
   }
 }
