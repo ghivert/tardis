@@ -92,7 +92,7 @@ pub fn create_model_updater(
       let msg = runtime.Debug(runtime.ForceModel(model))
       coerce(dispatcher)(msg)
     }
-    |> msg.AddApplication(application, _)
+    |> msg.LustreAddedApplication(application, _)
     |> lustre.dispatch
     |> dispatch
   }
@@ -103,7 +103,7 @@ pub fn step_adder(
   name: String,
 ) {
   fn(model, msg) {
-    msg.AddStep(name, model, msg)
+    msg.LustreRanStep(name, model, msg)
     |> lustre.dispatch()
     |> dispatch()
   }

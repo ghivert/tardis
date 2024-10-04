@@ -1,3 +1,4 @@
+import gleam/bool
 import gleam/list
 import gleam/option.{type Option}
 import gleam/pair
@@ -13,16 +14,13 @@ import tardis/internals/styles as s
 
 pub fn view_model(opened: Bool, debugger_: String, model: Debugger) {
   let selected = model.selected_step
-  case opened {
-    False -> element.none()
-    True ->
-      element.keyed(h.div(s.body(), [], _), {
-        model.steps
-        |> list.take(100)
-        |> list.map(fn(i) { #(i.index, view_step(debugger_, selected, i)) })
-        |> list.prepend(#("header", view_grid_header(opened, model)))
-      })
-  }
+  use <- bool.lazy_guard(when: !opened, return: element.none)
+  element.keyed(h.div(s.body(), [], _), {
+    model.steps
+    |> list.take(100)
+    |> list.map(fn(i) { #(i.index, view_step(debugger_, selected, i)) })
+    |> list.prepend(#("header", view_grid_header(opened, model)))
+  })
 }
 
 fn view_step(debugger_: String, selected_step: Option(String), item: Step) {
@@ -31,7 +29,7 @@ fn view_step(debugger_: String, selected_step: Option(String), item: Step) {
     True -> s.selected_details()
     False -> s.details()
   }
-  h.div(class, [event.on_click(msg.BackToStep(debugger_, item))], [
+  h.div(class, [event.on_click(msg.UserClickedStep(debugger_, item))], [
     h.div(s.step_index(), [], [h.text(index)]),
     h.div(s.step_msg(), [], view_data(data.inspect(msg), 0, "")),
     h.div(s.step_model(), [], view_data(data.inspect(model), 0, "")),

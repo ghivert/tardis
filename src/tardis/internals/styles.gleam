@@ -1,4 +1,5 @@
 import sketch
+import sketch/lustre/element/html as h
 import sketch/size.{percent, px}
 
 fn panel_() {
@@ -21,17 +22,19 @@ fn panel_() {
   ])
 }
 
-pub fn panel() {
+pub fn panel(attrs, children) {
   panel_()
+  |> h.div(attrs, children)
 }
 
-pub fn panel_closed() {
+pub fn panel_closed(attrs, children) {
   sketch.class([
     sketch.compose(panel_()),
     sketch.width(px(400)),
     // sketch.min_height(px(60)),
     sketch.justify_content("center"),
   ])
+  |> h.div(attrs, children)
 }
 
 fn grid_header_() {
@@ -66,12 +69,14 @@ fn header_() {
   ])
 }
 
-pub fn header() {
+pub fn header(attrs, children) {
   header_()
+  |> h.div(attrs, children)
 }
 
-pub fn bordered_header() {
+pub fn bordered_header(attrs, children) {
   sketch.class([sketch.compose(header_())])
+  |> h.div(attrs, children)
 }
 
 pub fn body() {
@@ -132,16 +137,17 @@ pub fn step_model() {
   ])
 }
 
-pub fn actions_section() {
+pub fn actions_section(attrs, children) {
   sketch.class([
     sketch.display("flex"),
     sketch.gap(px(12)),
     sketch.align_items("center"),
     sketch.white_space("nowrap"),
   ])
+  |> h.div(attrs, children)
 }
 
-pub fn toggle_button() {
+pub fn toggle_button(attrs, children) {
   sketch.class([
     sketch.appearance("none"),
     sketch.border("none"),
@@ -150,6 +156,7 @@ pub fn toggle_button() {
     sketch.property("cursor", "pointer"),
     sketch.color("var(--button)"),
   ])
+  |> h.button(attrs, children)
 }
 
 pub fn keyword_color() {
@@ -162,12 +169,13 @@ pub fn flex() {
   |> sketch.class()
 }
 
-pub fn debugger_title() {
+pub fn title(attrs, children) {
   sketch.class([
-    sketch.display("flex"),
+    sketch.compose(flex()),
     sketch.align_items("center"),
     sketch.gap(px(18)),
   ])
+  |> h.div(attrs, children)
 }
 
 pub fn text_color(color: String) {
@@ -183,7 +191,7 @@ pub fn subgrid_header() {
   ])
 }
 
-pub fn select_cs() {
+pub fn button_base() {
   sketch.class([
     sketch.appearance("none"),
     sketch.background("transparent"),
@@ -198,6 +206,16 @@ pub fn select_cs() {
     sketch.border_radius(px(5)),
     sketch.outline("none"),
   ])
+}
+
+pub fn button(attrs, children) {
+  button_base()
+  |> h.button(attrs, children)
+}
+
+pub fn select_cs(attrs, children) {
+  button_base()
+  |> h.select(attrs, children)
 }
 
 pub fn frozen_panel() {

@@ -38,11 +38,12 @@
 //// }
 //// ```
 
+import gleam/bool
 import gleam/dynamic.{type Dynamic}
 import gleam/int
 import gleam/io
 import gleam/list
-import gleam/option.{Some}
+import gleam/option.{None, Some}
 import gleam/pair
 import gleam/result
 import lustre.{type Action, type App}
@@ -127,7 +128,6 @@ fn start_lustre(lustre_root, application) {
 /// It can be skipped when using [`single`](#single).
 pub fn setup() {
   let #(shadow_root, lustre_root) = setup.mount_shadow_node()
-
   sketch.cache(strategy: sketch.Ephemeral)
   |> result.map(sl.compose(sl.shadow(shadow_root), view, _))
   |> result.map(lustre.application(init, update, _))
@@ -138,8 +138,7 @@ pub fn setup() {
 /// Directly creates a tardis instance for a single application.
 /// Replaces `setup` and `application` in a single application context.
 pub fn single(name: String) {
-  setup()
-  |> result.map(application(_, name))
+  result.map(setup(), application(_, name))
 }
 
 /// Creates the application debugger from the tardis. Should be run once,
@@ -152,12 +151,12 @@ pub fn application(instance: Tardis, name: String) -> Instance {
 }
 
 fn init(_) {
-  colors.choose_color_scheme()
-  |> Model(
+  let color_scheme = colors.choose_color_scheme()
+  Model(
     debuggers: [],
     frozen: False,
     opened: False,
-    color_scheme: _,
+    color_scheme:,
     selected_debugger: option.None,
   )
   |> pair.new(effect.none())
@@ -165,162 +164,180 @@ fn init(_) {
 
 fn update(model: Model, msg: Msg) {
   case msg {
-    msg.ToggleOpen -> #(Model(..model, opened: !model.opened), effect.none())
-
-    msg.Restart(debugger_) -> {
-      let restart_effect =
-        model.debuggers
-        |> list.filter_map(fn(d_) {
-          let d = pair.second(d_)
-          let fst_step = list.first(d.steps)
-          use step <- result.try(fst_step)
-          d.dispatcher
-          |> option.map(fn(d) { d(step.model) })
-          |> option.to_result(Nil)
-        })
-        |> effect.batch()
-
-      model.debuggers
-      |> debugger_.replace(debugger_, debugger_.unselect)
-      |> fn(ds) { Model(..model, frozen: False, debuggers: ds) }
-      |> pair.new(restart_effect)
-    }
-
-    msg.UpdateColorScheme(cs) ->
-      Model(..model, color_scheme: cs)
-      |> pair.new(colors.save_color_scheme(cs))
-
-    msg.AddApplication(debugger_, dispatcher) ->
+    msg.LustreAddedApplication(debugger_, dispatcher) -> {
       model.debuggers
       |> debugger_.replace(debugger_, debugger_.add_dispatcher(_, dispatcher))
-      |> fn(d) { Model(..model, debuggers: d) }
+      |> model.set_debuggers(model, _)
       |> pair.new(effect.none())
-
-    msg.BackToStep(debugger_, item) -> {
-      let selected_step = option.Some(item.index)
-      let model_effect =
-        model.debuggers
-        |> debugger_.get(debugger_)
-        |> result.try(fn(d) {
-          d.dispatcher
-          |> option.map(fn(d) { d(item.model) })
-          |> option.to_result(Nil)
-        })
-        |> result.unwrap(effect.none())
-
-      model.debuggers
-      |> debugger_.replace(debugger_, debugger_.select(_, selected_step))
-      |> fn(d) { Model(..model, frozen: True, debuggers: d) }
-      |> pair.new(model_effect)
     }
 
-    msg.Debug(value) -> {
-      io.debug(value)
+    msg.LustreRanStep(debugger_, m, m_) -> {
+      model.debuggers
+      |> debugger_.replace(debugger_, debugger_.add_step(_, m, m_))
+      |> model.set_debuggers(model, _)
+      |> model.optional_set_selected_debugger(debugger_)
+      |> pair.new(effect.none())
+    }
+
+    msg.TardisPrintDebug(message:) -> {
+      io.debug(message)
       #(model, effect.none())
     }
 
-    msg.SelectDebugger(debugger_) ->
-      Model(..model, selected_debugger: option.Some(debugger_))
-      |> pair.new(effect.none())
+    msg.UserChangedColorScheme(cs) -> {
+      Model(..model, color_scheme: cs)
+      |> pair.new(colors.save_color_scheme(cs))
+    }
 
-    msg.AddStep(debugger_, m, m_) -> {
+    msg.UserClickedStep(debugger_, item) -> {
       model.debuggers
-      |> debugger_.replace(debugger_, debugger_.add_step(_, m, m_))
-      |> fn(d) { Model(..model, debuggers: d) }
-      |> model.optional_set_debugger(debugger_)
+      |> debugger_.replace(debugger_, debugger_.select(_, Some(item.index)))
+      |> model.set_debuggers(model, _)
+      |> model.freeze
+      |> pair.new({
+        let debugger_ = debugger_.get(model.debuggers, debugger_)
+        use debugger_ <- result.try(debugger_)
+        debugger_.dispatcher
+        |> option.map(fn(dispatcher) { dispatcher(item.model) })
+        |> option.to_result(Nil)
+      })
+      |> pair.map_second(result.unwrap(_, effect.none()))
+    }
+
+    msg.UserResumedApplication(debugger_) -> {
+      model.debuggers
+      |> debugger_.replace(debugger_, debugger_.unselect)
+      |> model.set_debuggers(model, _)
+      |> model.unfreeze
+      |> pair.new({
+        effect.batch({
+          use #(_name, debugger_) <- list.filter_map(model.debuggers)
+          use step <- result.try(list.first(debugger_.steps))
+          debugger_.dispatcher
+          |> option.map(fn(dispatcher) { dispatcher(step.model) })
+          |> option.to_result(Nil)
+        })
+      })
+    }
+
+    msg.UserSelectedDebugger(debugger_) -> {
+      model.set_selected_debugger(model, debugger_)
       |> pair.new(effect.none())
     }
-  }
-}
 
-fn select_panel_options(panel_opened: Bool) {
-  case panel_opened {
-    True -> #(s.panel(), s.bordered_header(), "Close")
-    False -> #(s.panel_closed(), s.header(), "Open")
-  }
-}
-
-fn on_cs_input(content) {
-  let cs = colors.cs_from_string(content)
-  msg.UpdateColorScheme(cs)
-}
-
-fn on_debugger_input(content) {
-  msg.SelectDebugger(content)
-}
-
-fn color_scheme_selector(model: Model) {
-  case model.opened {
-    False -> el.none()
-    True ->
-      h.select(s.select_cs(), [event.on_input(on_cs_input)], {
-        use item <- list.map(colors.themes())
-        let as_s = colors.cs_to_string(item)
-        let selected = model.color_scheme == item
-        h.option_([a.value(as_s), a.selected(selected)], [h.text(as_s)])
-      })
-  }
-}
-
-fn restart_button(model: Model) {
-  case model.frozen, model.selected_debugger {
-    True, Some(debugger_) ->
-      h.button(s.select_cs(), [event.on_click(msg.Restart(debugger_))], [
-        h.text("Restart"),
-      ])
-    _, _ -> el.none()
+    msg.UserToggledPanel -> {
+      Model(..model, opened: !model.opened)
+      |> pair.new(effect.none())
+    }
   }
 }
 
 fn view(model: Model) {
+  let #(panel, header) = select_panel_options(model.opened)
+  let debugger_ = model.get_selected_debugger(model)
+  panel_wrapper(model, [], [
+    panel([], [
+      header([], [
+        s.title([], [
+          h.div_([], [h.text("Debugger")]),
+          view_color_scheme_selector(model),
+          view_restart_button(model),
+        ]),
+        view_debugger_actions(model, debugger_),
+      ]),
+      debugger_
+        |> result.map(view_debugger_body(model, _))
+        |> result.lazy_unwrap(el.none),
+    ]),
+  ])
+}
+
+fn select_panel_options(panel_opened: Bool) {
+  case panel_opened {
+    True -> #(s.panel, s.bordered_header)
+    False -> #(s.panel_closed, s.header)
+  }
+}
+
+fn panel_wrapper(model: Model, attrs, children) {
   let color_scheme_class = colors.get_color_scheme_class(model.color_scheme)
-  let #(panel, header, button_txt) = select_panel_options(model.opened)
-  let frozen_panel = case model.frozen {
+  let frozen_panel = select_frozen_panel(model)
+  let classes = [color_scheme_class, frozen_panel]
+  let panel_class = sketch.class(list.map(classes, sketch.compose))
+  h.div(panel_class, [a.class("debugger_"), ..attrs], children)
+}
+
+fn select_frozen_panel(model: Model) {
+  case model.frozen {
     True -> s.frozen_panel()
     False -> sketch.class([])
   }
-  let debugger_ =
-    model.selected_debugger
-    |> option.unwrap("")
-    |> debugger_.get(model.debuggers, _)
-  let panel_class =
-    [color_scheme_class, frozen_panel]
-    |> list.map(sketch.compose)
-    |> sketch.class
-  let title_class =
-    [s.flex(), s.debugger_title()]
-    |> list.map(sketch.compose)
-    |> sketch.class
-  h.div(panel_class, [a.class("debugger_")], [
-    h.div(panel, [], [
-      h.div(header, [], [
-        h.div(title_class, [], [
-          h.div_([], [h.text("Debugger")]),
-          color_scheme_selector(model),
-          restart_button(model),
-        ]),
-        case debugger_ {
-          Error(_) -> el.none()
-          Ok(debugger_) ->
-            h.div(s.actions_section(), [], [
-              h.select(s.select_cs(), [event.on_input(on_debugger_input)], {
-                use #(item, _) <- list.map(model.keep_active_debuggers(model))
-                let selected = model.selected_debugger == Some(item)
-                h.option_([a.value(item), a.selected(selected)], [h.text(item)])
-              }),
-              h.div_([], [
-                h.text(int.to_string(debugger_.count - 1) <> " Steps"),
-              ]),
-              h.button(s.toggle_button(), [event.on_click(msg.ToggleOpen)], [
-                h.text(button_txt),
-              ]),
-            ])
-        },
-      ]),
-      case debugger_, model.selected_debugger {
-        Ok(debugger_), Some(d) -> v.view_model(model.opened, d, debugger_)
-        _, _ -> el.none()
-      },
-    ]),
+}
+
+fn view_color_scheme_selector(model: Model) {
+  use <- bool.lazy_guard(when: !model.opened, return: el.none)
+  s.select_cs([event.on_input(on_cs_input)], {
+    use item <- list.map(colors.themes())
+    let as_s = colors.cs_to_string(item)
+    let selected = model.color_scheme == item
+    h.option_([a.value(as_s), a.selected(selected)], [h.text(as_s)])
+  })
+}
+
+fn on_cs_input(content) {
+  let cs = colors.cs_from_string(content)
+  msg.UserChangedColorScheme(cs)
+}
+
+fn view_restart_button(model: Model) {
+  use <- bool.lazy_guard(when: !model.frozen, return: el.none)
+  case model.selected_debugger {
+    None -> el.none()
+    Some(debugger_) ->
+      s.button([event.on_click(msg.UserResumedApplication(debugger_))], [
+        h.text("Restart"),
+      ])
+  }
+}
+
+fn view_debugger_actions(model, debugger_) {
+  case debugger_ {
+    Error(_) -> el.none()
+    Ok(debugger_) -> {
+      s.actions_section([], [
+        view_debugger_selection(model),
+        view_debugger_step_counter(debugger_),
+        view_debugger_toggle_panel_button(model),
+      ])
+    }
+  }
+}
+
+fn view_debugger_selection(model: Model) {
+  s.select_cs([event.on_input(msg.UserSelectedDebugger)], {
+    use #(item, _) <- list.map(model.keep_active_debuggers(model))
+    let selected = model.selected_debugger == Some(item)
+    h.option_([a.value(item), a.selected(selected)], [h.text(item)])
+  })
+}
+
+fn view_debugger_step_counter(debugger_: debugger_.Debugger) {
+  let count = int.to_string(debugger_.count - 1)
+  h.div_([], [h.text(count <> " Steps")])
+}
+
+fn view_debugger_toggle_panel_button(model: Model) {
+  s.toggle_button([event.on_click(msg.UserToggledPanel)], [
+    h.text(case model.opened {
+      True -> "Close"
+      False -> "Open"
+    }),
   ])
+}
+
+fn view_debugger_body(model: Model, debugger_: debugger_.Debugger) {
+  case model.selected_debugger {
+    Some(name) -> v.view_model(model.opened, name, debugger_)
+    None -> el.none()
+  }
 }
