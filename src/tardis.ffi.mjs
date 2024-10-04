@@ -73,7 +73,7 @@ function inspectCustomType(record) {
       return isNaN(parseInt(label))
         ? [new Some(label + ': '), value]
         : [new None(), value]
-    })
+    }),
   )
   return new DataCustomType(record.constructor.name, props)
 }
@@ -88,7 +88,7 @@ export function inspectBitArray(bits) {
 
 export function inspectUtfCodepoint(codepoint) {
   return new DataUtfCodepoint(
-    `//utfcodepoint(${String.fromCodePoint(codepoint.value)})`
+    `//utfcodepoint(${String.fromCodePoint(codepoint.value)})`,
   )
 }
 
@@ -199,4 +199,8 @@ export function updateLustre(application, initMapper, updateMapper) {
     update: updateMapper(application.update),
     init: initMapper(application.init),
   })
+}
+
+export function coerce(a) {
+  return a
 }

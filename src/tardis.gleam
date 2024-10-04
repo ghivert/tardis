@@ -39,7 +39,6 @@
 //// ```
 
 import gleam/dynamic.{type Dynamic}
-import gleam/function
 import gleam/int
 import gleam/io
 import gleam/list
@@ -49,11 +48,11 @@ import gleam/result
 import lustre.{type Action, type App}
 import lustre/attribute as a
 import lustre/effect
-import lustre/element as el
-import lustre/element/html as h
 import lustre/event
-import sketch/lustre as sketch
-import sketch/options as sketch_options
+import sketch
+import sketch/lustre as sl
+import sketch/lustre/element as el
+import sketch/lustre/element/html as h
 import tardis/error
 import tardis/internals/data/colors
 import tardis/internals/data/debugger as debugger_
@@ -124,21 +123,13 @@ fn start_lustre(lustre_root, application) {
   |> result.map_error(error.LustreError)
 }
 
-fn start_sketch(root) {
-  // Attach the StyleSheet to the Shadow DOM.
-  let setup = sketch.setup(sketch_options.shadow(root))
-  use error <- result.map_error(setup)
-  io.debug("Unable to start sketch. Check your configuration.")
-  io.debug(error)
-  error.SketchError(error)
-}
-
 /// Creates the tardis. Should be run once, at the start of the application.
 /// It can be skipped when using [`single`](#single).
 pub fn setup() {
   let #(shadow_root, lustre_root) = setup.mount_shadow_node()
-  start_sketch(shadow_root)
-  |> result.map(sketch.compose(view, _))
+
+  sketch.cache(strategy: sketch.Ephemeral)
+  |> result.map(sl.compose(sl.shadow(shadow_root), view, _))
   |> result.map(lustre.application(init, update, _))
   |> result.try(start_lustre(lustre_root, _))
   |> result.map(fn(dispatch) { Tardis(dispatch) })
@@ -184,7 +175,7 @@ fn update(model: Model, msg: Msg) {
           let fst_step = list.first(d.steps)
           use step <- result.try(fst_step)
           d.dispatcher
-          |> option.map(function.apply1(_, step.model))
+          |> option.map(fn(d) { d(step.model) })
           |> option.to_result(Nil)
         })
         |> effect.batch()
@@ -212,7 +203,7 @@ fn update(model: Model, msg: Msg) {
         |> debugger_.get(debugger_)
         |> result.try(fn(d) {
           d.dispatcher
-          |> option.map(function.apply1(_, item.model))
+          |> option.map(fn(d) { d(item.model) })
           |> option.to_result(Nil)
         })
         |> result.unwrap(effect.none())
@@ -262,11 +253,11 @@ fn color_scheme_selector(model: Model) {
   case model.opened {
     False -> el.none()
     True ->
-      h.select([event.on_input(on_cs_input), s.select_cs()], {
+      h.select(s.select_cs(), [event.on_input(on_cs_input)], {
         use item <- list.map(colors.themes())
         let as_s = colors.cs_to_string(item)
         let selected = model.color_scheme == item
-        h.option([a.value(as_s), a.selected(selected)], as_s)
+        h.option_([a.value(as_s), a.selected(selected)], [h.text(as_s)])
       })
   }
 }
@@ -274,7 +265,7 @@ fn color_scheme_selector(model: Model) {
 fn restart_button(model: Model) {
   case model.frozen, model.selected_debugger {
     True, Some(debugger_) ->
-      h.button([s.select_cs(), event.on_click(msg.Restart(debugger_))], [
+      h.button(s.select_cs(), [event.on_click(msg.Restart(debugger_))], [
         h.text("Restart"),
       ])
     _, _ -> el.none()
@@ -286,31 +277,41 @@ fn view(model: Model) {
   let #(panel, header, button_txt) = select_panel_options(model.opened)
   let frozen_panel = case model.frozen {
     True -> s.frozen_panel()
-    False -> a.none()
+    False -> sketch.class([])
   }
   let debugger_ =
     model.selected_debugger
     |> option.unwrap("")
     |> debugger_.get(model.debuggers, _)
-  h.div([a.class("debugger_"), color_scheme_class, frozen_panel], [
-    h.div([panel], [
-      h.div([header], [
-        h.div([s.flex(), s.debugger_title()], [
-          h.div([], [h.text("Debugger")]),
+  let panel_class =
+    [color_scheme_class, frozen_panel]
+    |> list.map(sketch.compose)
+    |> sketch.class
+  let title_class =
+    [s.flex(), s.debugger_title()]
+    |> list.map(sketch.compose)
+    |> sketch.class
+  h.div(panel_class, [a.class("debugger_")], [
+    h.div(panel, [], [
+      h.div(header, [], [
+        h.div(title_class, [], [
+          h.div_([], [h.text("Debugger")]),
           color_scheme_selector(model),
           restart_button(model),
         ]),
         case debugger_ {
           Error(_) -> el.none()
           Ok(debugger_) ->
-            h.div([s.actions_section()], [
-              h.select([event.on_input(on_debugger_input), s.select_cs()], {
+            h.div(s.actions_section(), [], [
+              h.select(s.select_cs(), [event.on_input(on_debugger_input)], {
                 use #(item, _) <- list.map(model.keep_active_debuggers(model))
                 let selected = model.selected_debugger == Some(item)
-                h.option([a.value(item), a.selected(selected)], item)
+                h.option_([a.value(item), a.selected(selected)], [h.text(item)])
               }),
-              h.div([], [h.text(int.to_string(debugger_.count - 1) <> " Steps")]),
-              h.button([s.toggle_button(), event.on_click(msg.ToggleOpen)], [
+              h.div_([], [
+                h.text(int.to_string(debugger_.count - 1) <> " Steps"),
+              ]),
+              h.button(s.toggle_button(), [event.on_click(msg.ToggleOpen)], [
                 h.text(button_txt),
               ]),
             ])

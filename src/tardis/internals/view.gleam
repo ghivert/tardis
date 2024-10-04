@@ -2,9 +2,9 @@ import gleam/list
 import gleam/option.{type Option}
 import gleam/pair
 import gleam/string
-import lustre/element.{type Element}
-import lustre/element/html as h
 import lustre/event
+import sketch/lustre/element.{type Element}
+import sketch/lustre/element/html as h
 import tardis/internals/data.{type Data}
 import tardis/internals/data/debugger.{type Debugger}
 import tardis/internals/data/msg.{type Msg}
@@ -16,7 +16,7 @@ pub fn view_model(opened: Bool, debugger_: String, model: Debugger) {
   case opened {
     False -> element.none()
     True ->
-      element.keyed(h.div([s.body()], _), {
+      element.keyed(h.div(s.body(), [], _), {
         model.steps
         |> list.take(100)
         |> list.map(fn(i) { #(i.index, view_step(debugger_, selected, i)) })
@@ -31,10 +31,10 @@ fn view_step(debugger_: String, selected_step: Option(String), item: Step) {
     True -> s.selected_details()
     False -> s.details()
   }
-  h.div([class, event.on_click(msg.BackToStep(debugger_, item))], [
-    h.div([s.step_index()], [h.text(index)]),
-    h.div([s.step_msg()], view_data(data.inspect(msg), 0, "")),
-    h.div([s.step_model()], view_data(data.inspect(model), 0, "")),
+  h.div(class, [event.on_click(msg.BackToStep(debugger_, item))], [
+    h.div(s.step_index(), [], [h.text(index)]),
+    h.div(s.step_msg(), [], view_data(data.inspect(msg), 0, "")),
+    h.div(s.step_model(), [], view_data(data.inspect(model), 0, "")),
   ])
 }
 
@@ -42,11 +42,11 @@ fn view_data_line(indent: Int, prefix: String, text: String, color: String) {
   let idt = string.repeat(" ", times: indent)
   let text_color = s.text_color(color)
   case string.length(prefix) {
-    0 -> h.div([text_color], [h.text(idt <> text)])
+    0 -> h.div(text_color, [], [h.text(idt <> text)])
     _ ->
-      h.div([s.flex()], [
-        h.div([s.keyword_color()], [h.text(idt <> prefix)]),
-        h.div([text_color], [h.text(text)]),
+      h.div(s.flex(), [], [
+        h.div(s.keyword_color(), [], [h.text(idt <> prefix)]),
+        h.div(text_color, [], [h.text(text)]),
       ])
   }
 }
@@ -59,10 +59,10 @@ fn select_grid_header_class(opened: Bool, model: Debugger) {
 }
 
 fn view_grid_header(opened: Bool, model: Debugger) {
-  h.div([select_grid_header_class(opened, model)], [
-    h.div([s.subgrid_header()], [h.text("Step")]),
-    h.div([s.subgrid_header()], [h.text("Msg")]),
-    h.div([s.subgrid_header()], [h.text("Model")]),
+  h.div(select_grid_header_class(opened, model), [], [
+    h.div(s.subgrid_header(), [], [h.text("Step")]),
+    h.div(s.subgrid_header(), [], [h.text("Msg")]),
+    h.div(s.subgrid_header(), [], [h.text("Model")]),
   ])
 }
 
@@ -132,7 +132,7 @@ fn view_data_list(values: List(Data), prefix p: String, indent i: Int) {
   let open_list = view_data_line(i, p, "[", "var(--editor-fg)")
   let close_list = fn(idt) { view_data_line(idt, "", "]", "var(--editor-fg)") }
   case list.is_empty(values) {
-    True -> [h.div([s.flex()], [open_list, close_list(0)])]
+    True -> [h.div(s.flex(), [], [open_list, close_list(0)])]
     False ->
       list.concat([
         [open_list],
@@ -192,10 +192,10 @@ fn view_data_custom_type(
         })
       case v > 2 {
         True -> body_type(True)
-        False -> [h.div([s.flex()], body_type(False))]
+        False -> [h.div(s.flex(), [], body_type(False))]
       }
     }
-    [] -> [h.div([s.flex()], [open_type(False), close_type(0, False)])]
+    [] -> [h.div(s.flex(), [], [open_type(False), close_type(0, False)])]
   }
 }
 
@@ -204,15 +204,14 @@ fn view_data_dict(values: List(#(Data, Data)), prefix p: String, indent i: Int) 
     [view_data_line(i, p, "//js dict.from_list([", "var(--editor-fg)")],
     list.flat_map(values, fn(data) {
       [
-        h.div(
-          [s.flex()],
+        h.div(s.flex(), [], {
           list.concat([
             view_data(pair.first(data), i + 2, "#("),
             view_data(pair.second(data), 0, ", "),
-            [h.div([s.text_color("var(--bool)")], [h.text(")")])],
+            [h.div(s.text_color("var(--bool)"), [], [h.text(")")])],
             [h.text(",")],
-          ]),
-        ),
+          ])
+        }),
       ]
     }),
     [view_data_line(i, "", "])", "var(--editor-fg)")],

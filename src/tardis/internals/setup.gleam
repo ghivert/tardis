@@ -15,6 +15,9 @@ pub type Middleware =
 @external(javascript, "../../tardis.ffi.mjs", "addCustomStyles")
 fn add_custom_styles(content: String) -> Nil
 
+@external(javascript, "../../tardis.ffi.mjs", "coerce")
+fn coerce(content: Dynamic) -> a
+
 pub fn instanciate_shadow_root(element: Element) {
   // Instanciate the Shadow DOM wrapper.
   let div = document.create_element("div")
@@ -39,7 +42,7 @@ pub fn mount_shadow_node() {
   let shadow_root = instanciate_shadow_root(lustre_root_)
   // Trick to fool lustre application.
   // Please children, don't do this at home.
-  let lustre_root: String = dynamic.unsafe_coerce(dynamic.from(lustre_root_))
+  let lustre_root: String = coerce(dynamic.from(lustre_root_))
   #(shadow_root, lustre_root)
 }
 
@@ -84,17 +87,14 @@ pub fn create_model_updater(
 ) {
   fn(dispatcher: Dynamic) {
     fn(model: Dynamic) -> Effect(Msg) {
-      effect.from(fn(_) {
-        model
-        |> dynamic.from()
-        |> runtime.ForceModel()
-        |> runtime.Debug()
-        |> dynamic.unsafe_coerce(dispatcher)
-      })
+      use _ <- effect.from
+      let model = dynamic.from(model)
+      let msg = runtime.Debug(runtime.ForceModel(model))
+      coerce(dispatcher)(msg)
     }
     |> msg.AddApplication(application, _)
-    |> lustre.dispatch()
-    |> dispatch()
+    |> lustre.dispatch
+    |> dispatch
   }
 }
 
@@ -103,8 +103,7 @@ pub fn step_adder(
   name: String,
 ) {
   fn(model, msg) {
-    model
-    |> msg.AddStep(name, _, msg)
+    msg.AddStep(name, model, msg)
     |> lustre.dispatch()
     |> dispatch()
   }

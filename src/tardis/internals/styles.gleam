@@ -23,18 +23,15 @@ fn panel_() {
 
 pub fn panel() {
   panel_()
-  |> sketch.to_lustre()
 }
 
 pub fn panel_closed() {
-  [
+  sketch.class([
     sketch.compose(panel_()),
     sketch.width(px(400)),
     // sketch.min_height(px(60)),
     sketch.justify_content("center"),
-  ]
-  |> sketch.class()
-  |> sketch.to_lustre()
+  ])
 }
 
 fn grid_header_() {
@@ -49,7 +46,6 @@ fn grid_header_() {
 
 pub fn grid_header() {
   grid_header_()
-  |> sketch.to_lustre()
 }
 
 pub fn bordered_grid_header() {
@@ -57,7 +53,6 @@ pub fn bordered_grid_header() {
     sketch.compose(grid_header_()),
     sketch.border_bottom("2px solid var(--primary)"),
   ])
-  |> sketch.to_lustre()
 }
 
 fn header_() {
@@ -73,13 +68,10 @@ fn header_() {
 
 pub fn header() {
   header_()
-  |> sketch.to_lustre()
 }
 
 pub fn bordered_header() {
-  [sketch.compose(header_())]
-  |> sketch.class()
-  |> sketch.to_lustre()
+  sketch.class([sketch.compose(header_())])
 }
 
 pub fn body() {
@@ -92,7 +84,6 @@ pub fn body() {
     sketch.white_space("pre-wrap"),
     sketch.font_size(px(10)),
   ])
-  |> sketch.to_lustre()
 }
 
 fn details_() {
@@ -108,13 +99,10 @@ fn details_() {
 
 pub fn details() {
   details_()
-  |> sketch.to_lustre()
 }
 
 pub fn selected_details() {
-  [sketch.compose(details_()), sketch.background("var(--shadow)")]
-  |> sketch.class()
-  |> sketch.to_lustre()
+  sketch.class([sketch.compose(details_()), sketch.background("var(--shadow)")])
 }
 
 pub fn step_index() {
@@ -125,7 +113,6 @@ pub fn step_index() {
     sketch.font_family("Lexend"),
     sketch.color("var(--syntax-comment)"),
   ])
-  |> sketch.to_lustre()
 }
 
 pub fn step_msg() {
@@ -135,7 +122,6 @@ pub fn step_msg() {
     sketch.padding(px(9)),
     sketch.border_right("1px solid var(--gutter)"),
   ])
-  |> sketch.to_lustre()
 }
 
 pub fn step_model() {
@@ -144,7 +130,6 @@ pub fn step_model() {
     sketch.word_break("break-all"),
     sketch.padding(px(6)),
   ])
-  |> sketch.to_lustre()
 }
 
 pub fn actions_section() {
@@ -154,7 +139,6 @@ pub fn actions_section() {
     sketch.align_items("center"),
     sketch.white_space("nowrap"),
   ])
-  |> sketch.to_lustre()
 }
 
 pub fn toggle_button() {
@@ -166,19 +150,16 @@ pub fn toggle_button() {
     sketch.property("cursor", "pointer"),
     sketch.color("var(--button)"),
   ])
-  |> sketch.to_lustre()
 }
 
 pub fn keyword_color() {
   [sketch.color("var(--bool)"), sketch.white_space("pre")]
   |> sketch.class()
-  |> sketch.to_lustre()
 }
 
 pub fn flex() {
   [sketch.display("flex")]
   |> sketch.class()
-  |> sketch.to_lustre()
 }
 
 pub fn debugger_title() {
@@ -187,13 +168,10 @@ pub fn debugger_title() {
     sketch.align_items("center"),
     sketch.gap(px(18)),
   ])
-  |> sketch.to_lustre()
 }
 
 pub fn text_color(color: String) {
-  { "syntax-" <> color }
-  |> sketch.dynamic([sketch.color(color)])
-  |> sketch.to_lustre
+  sketch.class([sketch.color(color)])
 }
 
 pub fn subgrid_header() {
@@ -203,7 +181,6 @@ pub fn subgrid_header() {
     sketch.background("var(--background)"),
     sketch.padding(px(9)),
   ])
-  |> sketch.to_lustre()
 }
 
 pub fn select_cs() {
@@ -221,7 +198,6 @@ pub fn select_cs() {
     sketch.border_radius(px(5)),
     sketch.outline("none"),
   ])
-  |> sketch.to_lustre()
 }
 
 pub fn frozen_panel() {
@@ -234,5 +210,4 @@ pub fn frozen_panel() {
     sketch.z_index(1_000_000),
     // sketch.background("rgba(255, 255, 255, 0.1)"),
   ])
-  |> sketch.to_lustre()
 }

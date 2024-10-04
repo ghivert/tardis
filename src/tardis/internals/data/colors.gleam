@@ -194,7 +194,6 @@ pub fn ayu_dark_class() {
     sketch.property("--regex", ayu_dark.regex),
     sketch.property("--date", ayu_dark.date),
   ])
-  |> sketch.to_lustre()
 }
 
 pub fn ayu_light_class() {
@@ -219,7 +218,6 @@ pub fn ayu_light_class() {
     sketch.property("--regex", ayu_light.regex),
     sketch.property("--date", ayu_light.date),
   ])
-  |> sketch.to_lustre()
 }
 
 pub fn catpuccin_light_class() {
@@ -244,7 +242,6 @@ pub fn catpuccin_light_class() {
     sketch.property("--regex", catpuccin_light.regex),
     sketch.property("--date", catpuccin_light.date),
   ])
-  |> sketch.to_lustre()
 }
 
 pub fn catpuccin_frappe_class() {
@@ -269,7 +266,6 @@ pub fn catpuccin_frappe_class() {
     sketch.property("--regex", catpuccin_frappe.regex),
     sketch.property("--date", catpuccin_frappe.date),
   ])
-  |> sketch.to_lustre()
 }
 
 pub fn gleam_class() {
@@ -294,7 +290,6 @@ pub fn gleam_class() {
     sketch.property("--regex", gleam.regex),
     sketch.property("--date", gleam.date),
   ])
-  |> sketch.to_lustre()
 }
 
 pub fn choose_color_scheme() {
