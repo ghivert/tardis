@@ -119,7 +119,7 @@ fn count_data(data: Data) {
 }
 
 fn view_data_tuple(values: List(Data), prefix p: String, indent i: Int) {
-  list.concat([
+  list.flatten([
     [view_data_line(i, p, "#(", "var(--editor-fg)")],
     list.flat_map(values, view_data(_, i + 2, "")),
     [view_data_line(i, p, ")", "var(--editor-fg)")],
@@ -132,7 +132,7 @@ fn view_data_list(values: List(Data), prefix p: String, indent i: Int) {
   case list.is_empty(values) {
     True -> [h.div(s.flex(), [], [open_list, close_list(0)])]
     False ->
-      list.concat([
+      list.flatten([
         [open_list],
         list.flat_map(values, view_data(_, i + 2, "")),
         [close_list(i)],
@@ -166,7 +166,7 @@ fn view_data_custom_type(
       False -> #(0, 0)
       True -> #(i, i + 2)
     }
-    list.concat([
+    list.flatten([
       [open_type(True)],
       list.flat_map(values, fn(data) {
         let prefix = option.unwrap(pair.first(data), "")
@@ -198,12 +198,12 @@ fn view_data_custom_type(
 }
 
 fn view_data_dict(values: List(#(Data, Data)), prefix p: String, indent i: Int) {
-  list.concat([
+  list.flatten([
     [view_data_line(i, p, "//js dict.from_list([", "var(--editor-fg)")],
     list.flat_map(values, fn(data) {
       [
         h.div(s.flex(), [], {
-          list.concat([
+          list.flatten([
             view_data(pair.first(data), i + 2, "#("),
             view_data(pair.second(data), 0, ", "),
             [h.div(s.text_color("var(--bool)"), [], [h.text(")")])],
@@ -217,7 +217,7 @@ fn view_data_dict(values: List(#(Data, Data)), prefix p: String, indent i: Int) 
 }
 
 fn view_data_set(vs: List(Data), prefix p: String, indent i: Int) {
-  list.concat([
+  list.flatten([
     [view_data_line(i, p, "//js Set(", "var(--editor-fg)")],
     list.flat_map(vs, view_data(_, i + 2, "")),
     [view_data_line(i, p, ")", "var(--editor-fg)")],
@@ -230,7 +230,7 @@ fn view_data_object(
   prefix p: String,
   indent i: Int,
 ) {
-  list.concat([
+  list.flatten([
     [view_data_line(i, p, name <> " {", "var(--editor-fg)")],
     list.flat_map(vs, fn(data) { view_data(pair.second(data), i + 2, "") }),
     [view_data_line(i, p, "}", "var(--editor-fg)")],

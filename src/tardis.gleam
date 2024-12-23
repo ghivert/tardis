@@ -131,6 +131,7 @@ pub fn setup() {
   sketch.cache(strategy: sketch.Ephemeral)
   |> result.map(sl.compose(sl.shadow(shadow_root), view, _))
   |> result.map(lustre.application(init, update, _))
+  |> result.map_error(error.SketchError)
   |> result.try(start_lustre(lustre_root, _))
   |> result.map(fn(dispatch) { Tardis(dispatch) })
 }
